@@ -4,7 +4,6 @@ classDiagram
 
     class QuestionRouter {
         +GET /api/questions
-        +GET /api/questions/notices
         +GET /api/questions/:id
         +POST /api/questions
         +PUT /api/questions/:id
@@ -79,8 +78,15 @@ classDiagram
         -email
         -password
         -name
-        -role
-        -deletedAt
+        -nickname
+        -createdAt
+        -updatedAt
+        -permission
+        -level
+        -questionCount
+        -answerCount
+        -questionRepliesCount
+        -answerRepliesCount
     }
     class Question {
         -id
@@ -90,7 +96,8 @@ classDiagram
         -content
         -viewCount
         -isSolved
-        -isNotice
+        -createdAt
+        -updatedAt
     }
     class Answer {
         -id
@@ -98,14 +105,44 @@ classDiagram
         -userId
         -content
         -isAccepted
-        -likeCount
+        -createdAt
+        -updatedAt
     }
-    class Comment {
+    class QuestionReply {
+        -id
+        -userId
+        -questionId
+        -content
+        -createdAt
+        -updatedAt
+    }
+
+    class AnswerReply {
+        -id
+        -userId
+        -answerId
+        -content
+        -createdAt
+        -updatedAt
+    }
+
+    class Permission {
+        -id
+        -userId
+        -status
+        -requestedAt
+        -resolvedAt
+    }
+
+    class Reports {
         -id
         -userId
         -questionId
         -answerId
-        -content
+        -questionReplyId
+        -answerReplyId
+        -reason
+        -reportedAt
     }
 
     QuestionRouter --> QuestionController
@@ -114,11 +151,25 @@ classDiagram
     AnswerController --> AnswerService
     AnswerService --> AnswerRepository
     AnswerService --> QuestionRepository
+
     QuestionService ..> Question
+    QuestionRepository ..> Question
     AnswerService ..> Answer
-    User "1" -- "N" Question
-    User "1" -- "N" Answer
+    AnswerRepository ..> Answer
+
+    User "1" -- "N" Question : 작성
+    User "1" -- "N" Answer : 작성
+    User "1" -- "N" QuestionReply : 작성
+    User "1" -- "N" AnswerReply : 작성
+    User "1" -- "N" Permission : 권한 신청
+    User "1" -- "N" Reports : 신고
+
     Question "1" -- "N" Answer
-    Question "1" -- "N" Comment
-    Answer "1" -- "N" Comment
+    Question "1" -- "N" QuestionReply
+    Answer "1" -- "N" AnswerReply
+
+    Question "1" -- "N" Reports : 신고됨
+    Answer "1" -- "N" Reports : 신고됨
+    QuestionReply "1" -- "N" Reports : 신고됨
+    AnswerReply "1" -- "N" Reports : 신고됨
 ```
