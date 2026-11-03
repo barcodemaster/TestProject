@@ -1,302 +1,153 @@
-```mermaid
-classDiagram
-    direction LR
+erDiagram
+    users ||--o{ questions : writes
+    users ||--o{ answers : writes   
+    users ||--|| permission : writes
+	
 
-    class QuestionRouter {
-        +GET /api/questions
-        +GET /api/questions/:id
-        +POST /api/questions
-        +PUT /api/questions/:id
-        +DELETE /api/questions/:id
-    }
-    class QuestionController {
-        -questionService
-        +getList(req, res, next)
-        +getNotices(req, res, next)
-        +getDetail(req, res, next)
-        +create(req, res, next)
-        +update(req, res, next)
-        +remove(req, res, next)
-    }
-    class QuestionService {
-        -questionRepository
-        -attachmentRepository
-        +getQuestions(page, size, categoryId, searchType, keyword, sort)
-        +getNotices()
-        +getQuestion(id)
-        +createQuestion(userId, role, dto, files)
-        +updateQuestion(id, userId, dto, files, deleteFileIds)
-        +deleteQuestion(id, userId, role)
-    }
-    class QuestionRepository {
-        -pool
-        +findAll(filter, limit, offset)
-        +countAll(filter)
-        +findNotices(limit)
-        +findById(id)
-        +increaseViewCount(id)
-        +save(question)
-        +update(id, question)
-        +markSolved(id, conn)
-        +delete(id)
+
+    questions ||--o{ comments : contains
+
+
+    comments ||--o{ likes 
+    Comments ||--o{ reports
+
+
+
+    users {
+        int id PK
+        varchar email UK "NOT NULL"
+        varchar password "NOT NULL"
+        varchar nickname "NOT NULL"
+        varchar skin_mbti
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
+        datetime deleted_at
+        varchar permission
+        varchar level
     }
 
-    class AnswerController {
-        -answerService
-        +getList(req, res, next)
-        +create(req, res, next)
-        +update(req, res, next)
-        +remove(req, res, next)
-        +accept(req, res, next)
-        +toggleLike(req, res, next)
+
+    boards {
+    	int id PK
+	varchar name
+	varchar category FK
     }
-    class AnswerService {
-        -answerRepository
-        -questionRepository
-        -likeRepository
-        +getAnswers(questionId, userId)
-        +createAnswer(questionId, userId, content)
-        +updateAnswer(id, userId, content)
-        +deleteAnswer(id, userId, role)
-        +acceptAnswer(answerId, userId)
-        +toggleLike(answerId, userId)
+    questions {
+        int id PK
+        int user_id FK “NOT NULL”
+	  varchar board_id FK “NOT NULL”
+        varchar category_id FK “NOT NULL”
+        varchar title “NOT NULL”
+        text content “NOT NULL”
+        int view_count “DEFAULT 0”
+        int like_count “DEFAULT 0”
+        datetime created_at
+        datetime updated_at
     }
-    class AnswerRepository {
-        -pool
-        +findByQuestionId(questionId)
-        +findById(id)
-        +existsByQuestionAndUser(questionId, userId)
-        +save(answer)
-        +update(id, content)
-        +markAccepted(id, conn)
-        +updateLikeCount(id, delta, conn)
-        +delete(id)
+    comments {
+        int id PK
+        int user_id FK “NOT NULL”
+        int question_id FK “NOT NULL”
+        text content “NOT NULL”
+        int like_count “DEFAULT 0”
+        datetime created_at
+        datetime updated_at
+    }
+    likes {
+        int id PK
+        int user_id FK “NOT NULL”
+        varchar target_type “NOT NULL”
+        Int target_id “NOT NULL”
+        datetime created_at
+    }    
+    
+    Products {
+    	 int id PK
+	 varchar mbti FK
+	 varchar name
+	 varchar description
+	 int price
+    }
+    
+    permission {
+	 int id PK
+	 int user_id FK 
+	 varchar status
+	 datetime requested_at 
+	 datetime resolved_at
+    }
+		
+    report {
+	 int id PK
+	 int answer_id FK, “NOT NULL”
+	 int question_id FK, “NOT NULL”
+	 varchar status “DEFAULT PENDING”
+	 varchar reason, 
+	 datetime reported_at
+}
+	
+    category {
+    	 int id PK
+        varchar type
+    }
+  
+    mbti_info{
+	 char code PK
+	 varchar nickname
     }
 
-    class ReplyController {
-        -replyService
-        +getByQuestion(req, res, next)
-        +getByAnswer(req, res, next)
-        +createOnQuestion(req, res, next)
-        +createOnAnswer(req, res, next)
-        +updateQuestionReply(req, res, next)
-        +updateAnswerReply(req, res, next)
-        +removeQuestionReply(req, res, next)
-        +removeAnswerReply(req, res, next)
-    }
-    class ReplyService {
-        -questionReplyRepository
-        -answerReplyRepository
-        -questionRepository
-        -answerRepository
-        +getQuestionReplies(questionId)
-        +getAnswerReplies(answerId)
-        +createQuestionReply(questionId, userId, content)
-        +createAnswerReply(answerId, userId, content)
-        +updateReply(type, id, userId, content)
-        +deleteReply(type, id, userId, role)
-    }
-    class QuestionReplyRepository {
-        -pool
-        +findByQuestionId(questionId)
-        +findById(id)
-        +save(reply)
-        +update(id, content)
-        +delete(id)
-    }
-    class AnswerReplyRepository {
-        -pool
-        +findByAnswerId(answerId)
-        +findById(id)
-        +save(reply)
-        +update(id, content)
-        +delete(id)
+
+    mbti_traits {
+	 charletter PK,
+	 tinyint axis_order,
+ varchar axis_name,
+ varchar label,
+ varchar description,
+ varchar care_point
     }
 
-    class PermissionController {
-        -permissionService
-        +create(req, res, next)
-        +getMine(req, res, next)
-        +getList(req, res, next)
-        +approve(req, res, next)
-        +reject(req, res, next)
+    mbti_rotuines {
+	 int id PK,
+ char mbti_code FK,
+ enum time_of_day,
+ tinyint step_order,
+ varchar step,
+ varchar tip
     }
-    class PermissionService {
-        -permissionRepository
-        -userRepository
-        +requestPermission(userId)
-        +getMyRequest(userId)
-        +getRequests(status, page, size)
-        +approve(id, adminId)
-        +reject(id, adminId)
-    }
-    class PermissionRepository {
-        -pool
-        +findPendingByUserId(userId)
-        +findLatestByUserId(userId)
-        +findAll(status, limit, offset)
-        +findById(id)
-        +save(permission)
-        +updateStatus(id, status, conn)
-    }
-    class UserRepository {
-        -pool
-        +findById(id)
-        +findByEmail(email)
-        +save(user)
-        +update(id, user)
-        +updatePermission(id, permission, conn)
+	
+    test_results {
+ int id PK
+ int user_id FK
+ char mbti,
+ tinyint o_score,
+ tinyint s_score,
+ tinyint t_score,
+ tinyint e_score,
+ varchar tip1,
+ varchar tip2
+ tinyint severe_warning,
+ datetime created_at
     }
 
-    class ReportController {
-        -reportService
-        +create(req, res, next)
-        +getList(req, res, next)
-        +getDetail(req, res, next)
-        +process(req, res, next)
-    }
-    class ReportService {
-        -reportRepository
-        -questionRepository
-        -answerRepository
-        -questionReplyRepository
-        -answerReplyRepository
-        +createReport(userId, targetType, targetId, reason)
-        +getReports(page, size)
-        +getReport(id)
-        +processReport(id, adminId, action)
-    }
-    class ReportRepository {
-        -pool
-        +existsByUserAndTarget(userId, targetType, targetId)
-        +findAll(limit, offset)
-        +countAll()
-        +findById(id)
-        +save(report)
-        +delete(id)
+    
+    test_questions {
+ int id PK
+ varchar text
     }
 
-    class User {
-        -id
-        -email
-        -password
-        -name
-        -nickname
-        -createdAt
-        -updatedAt
-        -permission
-        -level
-        -questionCount
-        -answerCount
-        -questionRepliesCount
-        -answerRepliesCount
-    }
-    class Question {
-        -id
-        -userId
-        -categoryId
-        -title
-        -content
-        -viewCount
-        -isSolved
-        -createdAt
-        -updatedAt
-    }
-    class Answer {
-        -id
-        -questionId
-        -userId
-        -content
-        -isAccepted
-        -createdAt
-        -updatedAt
-    }
-    class QuestionReply {
-        -id
-        -userId
-        -questionId
-        -content
-        -createdAt
-        -updatedAt
+
+    
+
+
+    purchase_reviews {
+    	 INT id PK “NOT NULL”,
+    	 INT user_id FK “NOT NULL”,
+    	 INT product_id FK “NOT NULL”,
+	 CHAR(4) mbti_code FK
+    	 VARCHAR(200) title “NOT NULL”,
+    	 TEXT content “NOT NULL”,
+    	 VARCHAR(500) image_url “NOT NULL”,
+    	 DATETIME created_at “NOT NULL”,
+    	 DATETIME updated_at “NOT NULL”
     }
 
-    class AnswerReply {
-        -id
-        -userId
-        -answerId
-        -content
-        -createdAt
-        -updatedAt
-    }
-
-    class Permission {
-        -id
-        -userId
-        -status
-        -requestedAt
-        -resolvedAt
-    }
-
-    class Reports {
-        -id
-        -userId
-        -questionId
-        -answerId
-        -questionReplyId
-        -answerReplyId
-        -status
-        -reason
-        -reportedAt
-    }
-
-    QuestionRouter --> QuestionController
-    QuestionController --> QuestionService
-    QuestionService --> QuestionRepository
-    AnswerController --> AnswerService
-    AnswerService --> AnswerRepository
-    AnswerService --> QuestionRepository
-    ReplyController --> ReplyService
-    ReplyService --> QuestionReplyRepository
-    ReplyService --> AnswerReplyRepository
-    ReplyService --> QuestionRepository
-    ReplyService --> AnswerRepository
-    PermissionController --> PermissionService
-    PermissionService --> PermissionRepository
-    PermissionService --> UserRepository
-    ReportController --> ReportService
-    ReportService --> ReportRepository
-    ReportService --> QuestionRepository
-    ReportService --> AnswerRepository
-    ReportService --> QuestionReplyRepository
-    ReportService --> AnswerReplyRepository
-
-    QuestionService ..> Question
-    QuestionRepository ..> Question
-    AnswerService ..> Answer
-    AnswerRepository ..> Answer
-    ReplyService ..> QuestionReply
-    ReplyService ..> AnswerReply
-    QuestionReplyRepository ..> QuestionReply
-    AnswerReplyRepository ..> AnswerReply
-    PermissionService ..> Permission
-    PermissionRepository ..> Permission
-    UserRepository ..> User
-    ReportService ..> Reports
-    ReportRepository ..> Reports
-
-    User "1" -- "N" Question : 작성
-    User "1" -- "N" Answer : 작성
-    User "1" -- "N" QuestionReply : 작성
-    User "1" -- "N" AnswerReply : 작성
-    User "1" -- "N" Permission : 권한 신청
-    User "1" -- "N" Reports : 신고
-
-    Question "1" -- "N" Answer
-    Question "1" -- "N" QuestionReply
-    Answer "1" -- "N" AnswerReply
-
-    Question "1" -- "N" Reports : 신고됨
-    Answer "1" -- "N" Reports : 신고됨
-    QuestionReply "1" -- "N" Reports : 신고됨
-    AnswerReply "1" -- "N" Reports : 신고됨
-```
