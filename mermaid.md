@@ -1,3 +1,6 @@
+
+
+```mermaid
 erDiagram
     %% ===== 회원 =====
     users ||--o{ questions : writes
@@ -169,4 +172,4 @@ erDiagram
         datetime created_at "NOT NULL"
         datetime updated_at "NOT NULL"
     }
-
+```
